@@ -18,8 +18,33 @@ jobs:
     - php: 7.2
     - php: 7.3
     - php: 7.4
+    #Added power jobs
+    - php: 5.4
+      arch: ppc64le
+      dist: trusty
+    - php: 5.5
+      arch: ppc64le
+      dist: trusty
+    - php: 5.6
+      arch: ppc64le
+    - php: 7.0
+      arch: ppc64le
+    - php: 7.1
+      arch: ppc64le
+    - php: 7.2
+      arch: ppc64le
+    - php: 7.3
+      arch: ppc64le
+    - php: 7.4
+      arch: ppc64le
     # Nightly is PHP 8.0 since Feb 2019.
     - php: nightly
+      addons:
+        apt:
+          packages:
+            - libonig-dev
+    - php: nightly
+      arch: ppc64le
       addons:
         apt:
           packages:
@@ -37,8 +62,25 @@ jobs:
       script:
       - php bin/phpcs --config-set php_path php
       - vendor/bin/phpunit tests/AllTests.php
+    - php: 5.5
+      arch: ppc64le
+      name: "PHP: 5.5 | Unit tests with custom PHP ini power"
+      dist: trusty
+      before_script:
+      - phpenv config-add php5-testingConfig.ini
+      script:
+      - php bin/phpcs --config-set php_path php
+      - vendor/bin/phpunit tests/AllTests.php
     - php: 7.0
       name: "PHP: 7.4 | Unit tests with custom PHP ini"
+      before_script:
+      - phpenv config-add php7-testingConfig.ini
+      script:
+      - php bin/phpcs --config-set php_path php
+      - vendor/bin/phpunit tests/AllTests.php
+    - php: 7.0
+      arch: ppc64le
+      name: "PHP: 7.4 | Unit tests with custom PHP ini for power"
       before_script:
       - phpenv config-add php7-testingConfig.ini
       script:
@@ -48,6 +90,35 @@ jobs:
     # Build running just the PEAR package file and XML file validation and code style check.
     - php: 7.4
       name: "PHP: 7.4 | Pear + XML validate"
+      addons:
+        apt:
+          packages:
+            - libxml2-utils
+      before_install:
+      - export XMLLINT_INDENT="    "
+      - phpenv config-rm xdebug.ini || echo 'No xdebug config.'
+      install:
+      - curl -O https://www.w3.org/2012/04/XMLSchema.xsd
+      script:
+      # Validate the Pear Package file contents.
+      - php scripts/validate-pear-package.php
+      # Validate the xml ruleset files.
+      # @link http://xmlsoft.org/xmllint.html
+      - xmllint --noout --schema phpcs.xsd ./src/Standards/*/ruleset.xml
+      - xmllint --noout --schema ./XMLSchema.xsd ./phpcs.xsd
+      # Check the code-style consistency of the xml files.
+      - diff -B ./phpcs.xml.dist <(xmllint --format "./phpcs.xml.dist")
+      - diff -B ./src/Standards/Generic/ruleset.xml <(xmllint --format "./src/Standards/Generic/ruleset.xml")
+      - diff -B ./src/Standards/MySource/ruleset.xml <(xmllint --format "./src/Standards/MySource/ruleset.xml")
+      - diff -B ./src/Standards/PEAR/ruleset.xml <(xmllint --format "./src/Standards/PEAR/ruleset.xml")
+      - diff -B ./src/Standards/PSR1/ruleset.xml <(xmllint --format "./src/Standards/PSR1/ruleset.xml")
+      - diff -B ./src/Standards/PSR2/ruleset.xml <(xmllint --format "./src/Standards/PSR2/ruleset.xml")
+      - diff -B ./src/Standards/PSR12/ruleset.xml <(xmllint --format "./src/Standards/PSR12/ruleset.xml")
+      - diff -B ./src/Standards/Squiz/ruleset.xml <(xmllint --format "./src/Standards/Squiz/ruleset.xml")
+      - diff -B ./src/Standards/Zend/ruleset.xml <(xmllint --format "./src/Standards/Zend/ruleset.xml")
+    - php: 7.4
+      arch: ppc64le
+      name: "PHP: 7.4 | Pear + XML validate on power"
       addons:
         apt:
           packages:
@@ -88,6 +159,19 @@ jobs:
       script:
       - composer require --dev phpstan/phpstan
       - php vendor/bin/phpstan analyse --configuration=phpstan.neon
+    - php: 7.4
+      arch: ppc64le
+      name: "PHP: 7.4 | PHPStan on power"
+      env: PHPSTAN=1
+      addons:
+        apt:
+          packages:
+            - libonig-dev
+      before_install:
+      - phpenv config-rm xdebug.ini || echo 'No xdebug config.'
+      script:
+      - composer require --dev phpstan/phpstan
+      - php vendor/bin/phpstan analyse --configuration=phpstan.neon
 
   allow_failures:
     - php: 7.4
@@ -105,7 +189,6 @@ before_install:
       // Allow installing "incompatible" PHPUnit version on PHP 8/nightly.
       travis_retry composer install --ignore-platform-reqs
     fi
-
 script:
   - php bin/phpcs --config-set php_path php
   - vendor/bin/phpunit tests/AllTests.php
