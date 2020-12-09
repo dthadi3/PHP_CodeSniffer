@@ -164,8 +164,7 @@ jobs:
     - php: nightly
 
 # Disable version 5.4, 5.5 
-jobs:
-  exclude:
+exclude:
     - php: 5.4
       arch: ppc64le
       dist: trusty
