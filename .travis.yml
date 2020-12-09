@@ -19,12 +19,6 @@ jobs:
     - php: 7.3
     - php: 7.4
     #Added power jobs
-    - php: 5.4
-      arch: ppc64le
-      dist: trusty
-    - php: 5.5
-      arch: ppc64le
-      dist: trusty
     - php: 5.6
       arch: ppc64le
     - php: 7.0
@@ -56,15 +50,6 @@ jobs:
     # Builds running the basic tests with different PHP ini settings.
     - php: 5.5
       name: "PHP: 5.5 | Unit tests with custom PHP ini"
-      dist: trusty
-      before_script:
-      - phpenv config-add php5-testingConfig.ini
-      script:
-      - php bin/phpcs --config-set php_path php
-      - vendor/bin/phpunit tests/AllTests.php
-    - php: 5.5
-      arch: ppc64le
-      name: "PHP: 5.5 | Unit tests with custom PHP ini power"
       dist: trusty
       before_script:
       - phpenv config-add php5-testingConfig.ini
@@ -178,6 +163,25 @@ jobs:
       env: PHPSTAN=1
     - php: nightly
 
+# Disable version 5.4, 5.5 
+jobs:
+  exclude:
+    - php: 5.4
+      arch: ppc64le
+      dist: trusty
+    - php: 5.5
+      arch: ppc64le
+      dist: trusty
+    - php: 5.5
+      arch: ppc64le
+      name: "PHP: 5.5 | Unit tests with custom PHP ini power"
+      dist: trusty
+      before_script:
+      - phpenv config-add php5-testingConfig.ini
+      script:
+      - php bin/phpcs --config-set php_path php
+      - vendor/bin/phpunit tests/AllTests.php
+          
 before_install:
   # Speed up build time by disabling Xdebug when its not needed.
   - phpenv config-rm xdebug.ini || echo 'No xdebug config.'
